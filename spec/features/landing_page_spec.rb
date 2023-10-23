@@ -33,4 +33,12 @@ RSpec.describe 'Landing Page' do
       expect(page).to have_content(user2.email)
     end     
   end 
+
+  it "has a link for log in that takes you to the log in page /login" do
+    expect(page).to have_link "Log In"
+
+    click_link "Log In"
+
+    expect(current_path).to eq("/login")
+  end
 end

@@ -2,8 +2,8 @@ require 'rails_helper'
 
 RSpec.describe 'Landing Page' do
   before :each do 
-    user1 = User.create(name: "User One", email: "user1@test.com", password: "1234")
-    user2 = User.create(name: "User Two", email: "user2@test.com", password: "5678")
+    @user1 = User.create(name: "User One", email: "user1@test.com", password: "1234")
+    @user2 = User.create(name: "User Two", email: "user2@test.com", password: "5678")
     visit '/'
   end 
 
@@ -22,15 +22,20 @@ RSpec.describe 'Landing Page' do
     expect(current_path).to eq(root_path)
   end 
 
-  it 'lists out existing users' do 
-    user1 = User.create(name: "User One", email: "user1@test.com")
-    user2 = User.create(name: "User Two", email: "user2@test.com")
+  it 'lists out existing users if you are logged in' do 
+    visit login_path
+
+    fill_in :email, with: @user1.email
+    fill_in :password, with: @user1.password
+    click_button "Log In"
+    
+    visit root_path
 
     expect(page).to have_content('Existing Users:')
 
     within('.existing-users') do 
-      expect(page).to have_content(user1.email)
-      expect(page).to have_content(user2.email)
+      expect(page).to have_content(@user1.email)
+      expect(page).to have_content(@user2.email)
     end     
   end 
 
@@ -40,5 +45,38 @@ RSpec.describe 'Landing Page' do
     click_link "Log In"
 
     expect(current_path).to eq("/login")
+  end
+
+  it "i should not see the section of the page that lists users if i am a visitor" do
+    visit root_path
+
+    expect(page).to_not have_content("Existing Users:")
+    expect(page).to_not have_content(@user1.email)
+    expect(page).to_not have_content(@user2.email)
+  end
+  
+  it "redirects a vistor back to the landing page with a message if they try to go to a dashboard" do
+    visit root_path
+
+    visit "/users/1"
+
+    expect(current_path).to eq(root_path)
+    expect(page).to have_content("You must be logged in or registered to access the dashboard")
+  end
+
+  it "redirects a vistor back to the landing page with a message if they try to create a new viewing party" do
+    movie = Movie.create(
+      title: "A movie",
+      description: "this is a movie",
+      rating: "4"
+    )
+
+    visit root_path
+
+    visit "/users/#{@user1.id}/movies/#{movie.id}"
+    click_button "Create a Viewing Party"
+
+    expect(current_path).to eq(root_path)
+    expect(page).to have_content("You must be logged in or registered to create a viewing party.")
   end
 end

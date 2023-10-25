@@ -60,4 +60,16 @@ RSpec.describe 'Landing Page' do
     expect(page).to_not have_content(user1.email)
     expect(page).to_not have_content(user2.email)
   end
+  
+  it "redirects a vistor back to the landing page with a message if they try to go to a dashboard" do
+    user1 = User.create(name: "User One", email: "user1@test.com")
+    user2 = User.create(name: "User Two", email: "user2@test.com")
+
+    visit root_path
+
+    visit "/users/1"
+
+    expect(current_path).to eq(root_path)
+    expect(page).to have_content("You must be logged in or registered to access the dashboard")
+  end
 end
